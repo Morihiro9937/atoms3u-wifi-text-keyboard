@@ -18,7 +18,7 @@ jobs:
       - name: Install PlatformIO
         run: python -m pip install platformio
       - name: Build firmware
-        run: ./scripts/pio run -e phase_e
+        run: sh scripts/pio run -e phase_e
       - name: Test web UI
         run: |
           node tests/alt_web_test.js
