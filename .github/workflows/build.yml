@@ -26,11 +26,11 @@ jobs:
           node tests/progress_sync_web_test.js
       - name: Test portable helpers
         run: |
-          g++ -std=c++17 -Wall -Wextra -pedantic tests/alt_encoding_test.cpp -o /tmp/alt_encoding_test
+          g++ -std=c++17 -Wall -Wextra -pedantic -Isrc tests/alt_encoding_test.cpp -o /tmp/alt_encoding_test
           /tmp/alt_encoding_test
-          g++ -std=c++17 -Wall -Wextra -pedantic tests/led_policy_test.cpp -o /tmp/led_policy_test
+          g++ -std=c++17 -Wall -Wextra -pedantic -Isrc tests/led_policy_test.cpp -o /tmp/led_policy_test
           /tmp/led_policy_test
-          g++ -std=c++17 -Wall -Wextra -pedantic tests/typing_settings_test.cpp -o /tmp/typing_settings_test
+          g++ -std=c++17 -Wall -Wextra -pedantic -Isrc tests/typing_settings_test.cpp -o /tmp/typing_settings_test
           /tmp/typing_settings_test
       - uses: actions/upload-artifact@v4
         with:
