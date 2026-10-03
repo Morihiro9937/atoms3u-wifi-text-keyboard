@@ -1,0 +1,38 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install PlatformIO
+        run: python -m pip install platformio
+      - name: Build firmware
+        run: ./scripts/pio run -e phase_e
+      - name: Test web UI
+        run: |
+          node tests/alt_web_test.js
+          node tests/phase_e_web_test.js
+          node tests/progress_sync_web_test.js
+      - name: Test portable helpers
+        run: |
+          g++ -std=c++17 -Wall -Wextra -pedantic tests/alt_encoding_test.cpp -o /tmp/alt_encoding_test
+          /tmp/alt_encoding_test
+          g++ -std=c++17 -Wall -Wextra -pedantic tests/led_policy_test.cpp -o /tmp/led_policy_test
+          /tmp/led_policy_test
+          g++ -std=c++17 -Wall -Wextra -pedantic tests/typing_settings_test.cpp -o /tmp/typing_settings_test
+          /tmp/typing_settings_test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atoms3u-wifi-text-keyboard-${{ github.sha }}
+          path: .pio/build/phase_e/firmware.bin
