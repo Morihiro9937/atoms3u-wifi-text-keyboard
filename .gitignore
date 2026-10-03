@@ -1,0 +1,13 @@
+.pio/
+.vscode/
+*.log
+.tools/
+archive/
+migration/
+firmware/
+dist/
+.DS_Store
+.env
+.env.*
+AGENTS.md
+KARUTE_STATUS.md
