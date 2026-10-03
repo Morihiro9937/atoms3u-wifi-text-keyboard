@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+KARUTE_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+export PYTHONDONTWRITEBYTECODE=1
+cd "$KARUTE_ROOT"
+
+# Maintainers may keep a fully isolated PlatformIO installation under .tools.
+# Public clones fall back to a regular system installation.
+if [ -x "$KARUTE_ROOT/.tools/platformio-venv/bin/python" ]; then
+    export PLATFORMIO_CORE_DIR="$KARUTE_ROOT/.tools/platformio-core"
+    export TMPDIR="$KARUTE_ROOT/.tools/tmp"
+    export PIP_CACHE_DIR="$KARUTE_ROOT/.tools/pip-cache"
+    mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
+    exec "$KARUTE_ROOT/.tools/platformio-venv/bin/python" -m platformio "$@"
+fi
+
+if command -v pio >/dev/null 2>&1; then
+    exec pio "$@"
+fi
+
+if command -v platformio >/dev/null 2>&1; then
+    exec platformio "$@"
+fi
+
+echo "PlatformIO Core not found. Install it from https://platformio.org/install/cli" >&2
+exit 127
