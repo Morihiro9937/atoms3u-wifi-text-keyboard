@@ -64,7 +64,7 @@ pio run -e phase_e
 也可以使用包装脚本；它会优先使用项目内已有的本地工具链，否则调用系统中的 `pio` 或 `platformio`：
 
 ```sh
-./scripts/pio run -e phase_e
+sh scripts/pio run -e phase_e
 ```
 
 应用固件位于 `.pio/build/phase_e/firmware.bin`。构建时会把 `web/*.html` 以 gzip 压缩并生成 C++ 头文件；网页应直接修改 `web/` 下的源文件。
@@ -78,13 +78,13 @@ pio run -e phase_e
 3. 查看串口：
 
    ```sh
-   ./scripts/pio device list
+   sh scripts/pio device list
    ```
 
 4. 指定串口烧录：
 
    ```sh
-   ./scripts/pio run -e phase_e -t upload --upload-port /dev/cu.usbmodemXXXX
+   sh scripts/pio run -e phase_e -t upload --upload-port /dev/cu.usbmodemXXXX
    ```
 
    Windows 把端口替换为类似 `COM7`。
@@ -111,7 +111,7 @@ python -m esptool --chip esp32s3 --port <串口> --baud 460800 write_flash 0x0 a
 默认环境和当前主程序分别是 `phase_e` 与 `src/phase_e.cpp`：
 
 ```sh
-./scripts/pio run -e phase_e
+sh scripts/pio run -e phase_e
 node tests/alt_web_test.js
 node tests/phase_e_web_test.js
 node tests/progress_sync_web_test.js
