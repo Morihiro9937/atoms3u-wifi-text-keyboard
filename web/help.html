@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>karute 操作说明</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { margin: 0; background: #f3f5f7; color: #17202a; }
+    main { max-width: 720px; margin: 0 auto; padding: 20px 16px 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h1 { margin: 4px 0 14px; font-size: 25px; }
+    a { color: #246bfd; text-decoration: none; font-weight: 650; }
+    .card { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 2px 14px #17202a12; }
+    h2 { margin: 22px 0 8px; font-size: 18px; }
+    h2:first-child { margin-top: 0; }
+    p,li { font-size: 15px; line-height: 1.7; }
+    ol,ul { margin: 8px 0; padding-left: 24px; }
+    .wifi { padding: 10px 12px; border-radius: 9px; background: #f4f7fb; line-height: 1.8; }
+    .lights { display: grid; grid-template-columns: auto 1fr; gap: 7px 12px; align-items: center; font-size: 14px; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .white { background: #ddd; border: 1px solid #aaa; }
+    .green { background: #16833d; } .yellow { background: #d9a400; }
+    .blue { background: #246bfd; } .purple { background: #8e44ad; }
+    .orange { background: #e26b00; } .red { background: #c62828; }
+    .warning { color: #8b2e20; font-weight: 650; }
+    .version { margin: 0 0 16px; color: #65717d; font-size: 14px; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="top"><h1>操作说明</h1><a href="/">返回</a></div>
+  <section class="card">
+    <p class="version">固件版本：<b id="firmwareVersion">正在读取…</b></p>
+    <h2>连接设备</h2>
+    <div class="wifi">Wi-Fi：<b id="helpWifiName">正在读取…</b><br>密码：请在 Wi-Fi 设置中查看<br>网页：<b id="helpLoginUrl">http://karute.local</b><br>备用：<b id="helpBackupUrl">http://192.168.4.1</b></div>
+    <p>如果iPhone开启了VPN且网页无法访问，请暂时关闭VPN，或让VPN放行本地地址192.168.4.0/24。</p>
+    <p>忘记连接信息时，在Windows开启Num Lock后长按设备实体按钮约3秒。设备会用Win+R启动记事本，再以GBK数字方式输入 <b>SSID</b>、<b>Password</b>、<b>Login URL</b> 和 <b>Backup URL</b>。</p>
+
+    <h2>输入一篇文字</h2>
+    <ol>
+      <li>主页每秒统一同步一次指令、正文保存和打印状态。打印后显示绿色进度条及预计剩余时间（到秒），暂停时保留，完成后保留100%满条；失联时冻结并变灰。剩余时间按剩余字数估算，实际速度需在目标电脑验证。</li>
+      <li>在主页面粘贴已经人工核对的正文，停止编辑约 1.5～2.5 秒后自动保存。左侧黄灯表示尚未保存完，绿灯表示已写入断电存储。</li>
+      <li>先在 Windows 记事本中测试。VUC 从微软拼音中文状态开始；ENG、GBK 从英文状态开始。GBK 还需开启 Num Lock；确认光标位置。</li>
+      <li>点击网页“打印”，它会先保存最新版，再按设置中的倒计时开始输入。也可以在绿灯时短按实体按钮。</li>
+      <li>输入期间不要操作真实键盘、鼠标或切换窗口。</li>
+      <li>打印中点击“暂停”会等当前字完整输入后停下；点击“继续”从暂停处接着输入。点击“停止”或长按实体按钮约 1 秒会终止本次打印。</li>
+      <li>输入完成后逐字核对；确认无误后再用于目标系统。</li>
+    </ol>
+
+    <h2>实体指示灯</h2>
+    <div class="lights">
+      <span class="dot yellow"></span><span>黄灯：编辑内容尚未完全保存</span>
+      <span class="dot green"></span><span>待机绿灯常亮：手机网页与设备互联正常</span>
+      <span class="dot red"></span><span>待机红0.4秒、绿1.6秒循环：约6秒未收到网页互联心跳</span>
+      <span class="dot green"></span><span>倒计时：绿灯慢闪</span>
+      <span class="dot green"></span><span>打印时：VUC仅按c、GBK仅按小键盘1、ENG仅按E/e时亮绿灯，键释放即熄灭</span>
+      <span class="dot blue"></span><span>蓝灯：已暂停，可继续或停止</span>
+      <span class="dot red"></span><span>红灯常亮：本次打印已停止；再次修改并保存正文后恢复绿灯</span>
+      <span class="dot red"></span><span>红灯：设备发生错误</span>
+    </div>
+
+    <h2>数据与设置</h2>
+    <ul>
+      <li>VUC 模式输入所有可打印字符；ENG 模式直接输入英文键盘上的 ASCII 字符，中文等非 ASCII 字符会跳过。</li>
+      <li>GBK 使用 Alt＋数字小键盘，不使用 VUC。中文显示取决于 Windows 系统编码和目标软件；不保证所有软件兼容。请先用短文本验证。</li>
+      <li>GBK 遇到无法编码的字符会拒绝整篇打印并提示位置，不会悄悄跳过。暂停、停止会等当前 Alt 编码完整结束再执行。</li>
+      <li>GBK、ENG、VUC 的速度分别保存，断电后仍会保留。</li>
+      <li>Wi-Fi名称、密码和本地登录地址可在“设置 → Wi-Fi设置”中修改。登录地址必须使用 http://名称.local；备用地址 http://192.168.4.1 固定不可修改。</li>
+      <li>输入指示灯和待机指示灯可在设置中分别关闭，选项断电后保留。</li>
+      <li>GBK 可分别设置 Alt 按下后间隔、数字按下时间、数字间隔、Alt 松开前间隔和字间间隔。</li>
+      <li>正文会写入设备断电存储；拔掉设备后再次上电，正文仍然存在。新内容覆盖旧正文，不保存多篇历史。</li>
+      <li>“清空”会删除当前正文；但普通闪存删除不能保证旧数据不可恢复。请勿把它当作安全擦除。</li>
+      <li>正文和速度设置都会在断电后保留。建议避免保存含患者身份信息的正文。</li>
+      <li>正文上限为 32768 字节，超过上限会拒绝保存，不会截断。</li>
+    </ul>
+
+    <h2>常见问题</h2>
+    <ul>
+      <li>出现原始vuc编码：确认Windows微软拼音处于中文状态。</li>
+      <li>出现漏字、错字或乱码：适当增加间隔时间、空格前间隔或空格后间隔。</li>
+      <li>本地域名打不开：确认仍连接karute Wi-Fi并关闭VPN，然后使用固定备用地址 http://192.168.4.1。</li>
+    </ul>
+    <p class="warning">医疗文书必须由使用者最终审核。建议始终先输入记事本核对，再复制到HIS。</p>
+  </section>
+</main>
+<script>
+fetch('/api/status', {cache: 'no-store'})
+  .then(response => response.json())
+  .then(status => {
+    document.querySelector('#firmwareVersion').textContent =
+      status.firmwareVersion || '未知';
+  })
+  .catch(() => {
+    document.querySelector('#firmwareVersion').textContent = '读取失败';
+  });
+fetch('/api/wifi', {cache: 'no-store'})
+  .then(response => response.json())
+  .then(wifi => {
+    document.querySelector('#helpWifiName').textContent = wifi.wifiName;
+    document.querySelector('#helpLoginUrl').textContent = wifi.loginUrl;
+    document.querySelector('#helpBackupUrl').textContent = wifi.backupUrl;
+  })
+  .catch(() => {
+    document.querySelector('#helpWifiName').textContent = '读取失败';
+  });
+</script>
+</body>
+</html>

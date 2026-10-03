@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>karute Wi-Fi 设置</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { margin: 0; background: #f3f5f7; color: #17202a; }
+    main { max-width: 680px; margin: 0 auto; padding: 20px 16px 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h1 { margin: 4px 0 14px; font-size: 25px; }
+    a { color: #246bfd; text-decoration: none; font-weight: 650; }
+    .card { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 2px 14px #17202a12; }
+    label { display: block; margin: 0 0 15px; font-size: 14px; color: #4d5965; }
+    label span { display: block; margin-bottom: 6px; font-weight: 650; color: #17202a; }
+    input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #ccd3da; border-radius: 9px; background: white; font-size: 16px; }
+    .fixed { margin-bottom: 15px; padding: 11px; border-radius: 9px; background: #f4f7fb; font-family: ui-monospace,SFMono-Regular,Menlo,monospace; }
+    button { width: 100%; min-height: 44px; border: 0; border-radius: 9px; color: white; background: #246bfd; font-size: 15px; font-weight: 650; }
+    #message { min-height: 24px; margin-top: 12px; font-size: 14px; }
+    .ok { color: #137333; } .error { color: #b3261e; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="top"><h1>Wi-Fi 设置</h1><a href="/settings">返回</a></div>
+  <section class="card">
+    <label><span>Wi-Fi 名称</span><input id="wifiName" type="text" maxlength="32" autocapitalize="none" autocomplete="off" spellcheck="false"></label>
+    <label><span>密码</span><input id="wifiPassword" type="text" maxlength="63" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+    <label><span>登录地址</span><input id="loginUrl" type="url" maxlength="76" value="http://karute.local" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+    <label><span>备用地址</span><div id="backupUrl" class="fixed">http://192.168.4.1</div></label>
+    <button id="saveWifi">保存 Wi-Fi 设置</button>
+    <div id="message"></div>
+  </section>
+</main>
+<script>
+const wifiName = document.querySelector('#wifiName');
+const wifiPassword = document.querySelector('#wifiPassword');
+const loginUrl = document.querySelector('#loginUrl');
+const message = document.querySelector('#message');
+function showMessage(value, kind = '') {
+  message.textContent = value;
+  message.className = kind;
+}
+async function loadWifi() {
+  try {
+    const response = await fetch('/api/wifi', {cache: 'no-store'});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || '读取失败');
+    wifiName.value = data.wifiName;
+    wifiPassword.value = data.password;
+    loginUrl.value = data.loginUrl;
+    document.querySelector('#backupUrl').textContent = data.backupUrl;
+  } catch (_) {
+    showMessage('无法读取 Wi-Fi 设置。', 'error');
+  }
+}
+document.querySelector('#saveWifi').addEventListener('click', async () => {
+  showMessage('正在保存……');
+  try {
+    const response = await fetch('/api/wifi', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({wifiName: wifiName.value,
+        password: wifiPassword.value, loginUrl: loginUrl.value})
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || '保存失败');
+    showMessage('已保存，请连接新的 Wi-Fi。', 'ok');
+  } catch (error) {
+    showMessage(error.message || '无法连接设备', 'error');
+  }
+});
+loadWifi();
+</script>
+</body>
+</html>

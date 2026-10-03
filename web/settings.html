@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>karute 设置</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { margin: 0; background: #f3f5f7; color: #17202a; }
+    main { max-width: 680px; margin: 0 auto; padding: 20px 16px 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    h1 { margin: 4px 0 14px; font-size: 25px; }
+    a { color: #246bfd; text-decoration: none; font-weight: 650; }
+    .card { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 2px 14px #17202a12; }
+    label { display: block; margin: 0 0 15px; font-size: 14px; color: #4d5965; }
+    label span { display: block; margin-bottom: 6px; font-weight: 650; color: #17202a; }
+    input, select { box-sizing: border-box; width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #ccd3da; border-radius: 9px; background: white; font-size: 16px; }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .switch-row span { margin: 0; }
+    .switch-row input { width: 22px; min-height: 22px; padding: 0; accent-color: #246bfd; }
+    button { min-height: 44px; border: 0; border-radius: 9px; padding: 0 14px; font-size: 15px; font-weight: 650; }
+    #save { width: 100%; color: white; background: #246bfd; }
+    .mode-fields[hidden] { display: none; }
+    .utility-row { display: flex; align-items: center; gap: 16px; margin-top: 11px; }
+    .utility-link, #reset { min-height: 0; padding: 0; color: #246bfd; background: none; border: 0; text-decoration: none; font-size: 15px; font-weight: 650; cursor: pointer; }
+    #message { min-height: 24px; margin-top: 12px; font-size: 14px; }
+    .ok { color: #137333; }
+    .error { color: #b3261e; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="top"><h1>输入设置</h1><a href="/">返回</a></div>
+  <section class="card">
+    <label><span>输入模式</span>
+      <select id="mode">
+        <option value="4">GBK</option>
+        <option value="2">ENG</option>
+        <option value="1">VUC</option>
+      </select>
+    </label>
+    <div id="vucFields" class="mode-fields">
+      <label><span>按下时间（1～100 ms）</span><input id="vucDown" type="number" min="1" max="100" step="1"></label>
+      <label><span>间隔时间（1～100 ms）</span><input id="vucInterval" type="number" min="1" max="100" step="1"></label>
+      <label><span>空格前间隔（1～100 ms）</span><input id="vucBefore" type="number" min="1" max="100" step="1"></label>
+      <label><span>空格后间隔（1～100 ms）</span><input id="vucAfter" type="number" min="1" max="100" step="1"></label>
+    </div>
+    <div id="engFields" class="mode-fields" hidden>
+      <label><span>按下时间（1～100 ms）</span><input id="engDown" type="number" min="1" max="100" step="1"></label>
+      <label><span>间隔时间（1～100 ms）</span><input id="engInterval" type="number" min="1" max="100" step="1"></label>
+    </div>
+    <div id="altFields" class="mode-fields" hidden>
+      <label><span>Alt按下后间隔（1～100 ms）</span><input id="altBefore" type="number" min="1" max="100" step="1"></label>
+      <label><span>数字按下时间（1～100 ms）</span><input id="altDown" type="number" min="1" max="100" step="1"></label>
+      <label><span>数字间隔（1～100 ms）</span><input id="altInterval" type="number" min="1" max="100" step="1"></label>
+      <label><span>Alt松开前间隔（1～100 ms）</span><input id="altRelease" type="number" min="1" max="100" step="1"></label>
+      <label><span>字间间隔（1～100 ms）</span><input id="altAfter" type="number" min="1" max="100" step="1"></label>
+    </div>
+    <label><span>开始前倒计时（0～10 秒）</span><input id="startDelay" type="number" min="0" max="10" step="1"></label>
+    <label class="switch-row"><span>输入指示灯</span><input id="inputLed" type="checkbox"></label>
+    <label class="switch-row"><span>待机指示灯</span><input id="standbyLed" type="checkbox"></label>
+    <button id="save">保存设置</button>
+    <div class="utility-row"><a class="utility-link" href="/settings/wifi">Wi-Fi 设置</a><button id="reset">恢复默认</button></div>
+    <div id="message"></div>
+  </section>
+</main>
+<script>
+const fields = {
+  mode: document.querySelector('#mode'),
+  vucDown: document.querySelector('#vucDown'),
+  vucInterval: document.querySelector('#vucInterval'),
+  vucBefore: document.querySelector('#vucBefore'),
+  vucAfter: document.querySelector('#vucAfter'),
+  engDown: document.querySelector('#engDown'),
+  engInterval: document.querySelector('#engInterval'),
+  altBefore: document.querySelector('#altBefore'),
+  altRelease: document.querySelector('#altRelease'),
+  altDown: document.querySelector('#altDown'),
+  altInterval: document.querySelector('#altInterval'),
+  altAfter: document.querySelector('#altAfter'),
+  startDelay: document.querySelector('#startDelay'),
+  inputLed: document.querySelector('#inputLed'),
+  standbyLed: document.querySelector('#standbyLed')
+};
+const message = document.querySelector('#message');
+
+function showMode() {
+  document.querySelector('#vucFields').hidden = fields.mode.value !== '1';
+  document.querySelector('#engFields').hidden = fields.mode.value !== '2';
+  document.querySelector('#altFields').hidden = fields.mode.value !== '4';
+}
+
+fields.mode.addEventListener('change', showMode);
+
+function fillSettings(data) {
+  fields.mode.value = String(data.mode);
+  fields.vucDown.value = data.vucDownMs;
+  fields.vucInterval.value = data.vucIntervalMs;
+  fields.vucBefore.value = data.vucBeforeSpaceMs;
+  fields.vucAfter.value = data.vucAfterSpaceMs;
+  fields.engDown.value = data.engDownMs;
+  fields.engInterval.value = data.engIntervalMs;
+  fields.altBefore.value = data.altBeforeMs;
+  fields.altRelease.value = data.altReleaseMs;
+  fields.altDown.value = data.altDownMs;
+  fields.altInterval.value = data.altIntervalMs;
+  fields.altAfter.value = data.altAfterMs;
+  fields.startDelay.value = data.startDelayMs / 1000;
+  fields.inputLed.checked = Boolean(data.inputLedEnabled);
+  fields.standbyLed.checked = Boolean(data.standbyLedEnabled);
+  showMode();
+}
+
+function showMessage(value, kind = '') {
+  message.textContent = value;
+  message.className = kind;
+}
+
+async function loadSettings() {
+  try {
+    const response = await fetch('/api/settings', {cache: 'no-store'});
+    const data = await response.json();
+    fillSettings(data);
+  } catch (_) {
+    showMessage('无法读取设备设置。', 'error');
+  }
+}
+
+document.querySelector('#save').addEventListener('click', async () => {
+  const body = new URLSearchParams({
+    mode: fields.mode.value,
+    vucDownMs: fields.vucDown.value,
+    vucIntervalMs: fields.vucInterval.value,
+    vucBeforeSpaceMs: fields.vucBefore.value,
+    vucAfterSpaceMs: fields.vucAfter.value,
+    engDownMs: fields.engDown.value,
+    engIntervalMs: fields.engInterval.value,
+    altBeforeMs: fields.altBefore.value,
+    altReleaseMs: fields.altRelease.value,
+    altDownMs: fields.altDown.value,
+    altIntervalMs: fields.altInterval.value,
+    altAfterMs: fields.altAfter.value,
+    startDelaySeconds: fields.startDelay.value,
+    inputLedEnabled: fields.inputLed.checked ? '1' : '0',
+    standbyLedEnabled: fields.standbyLed.checked ? '1' : '0'
+  });
+  showMessage('正在保存……');
+  try {
+    const response = await fetch('/api/settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || '保存失败');
+    fillSettings(result);
+    showMessage('已保存。', 'ok');
+  } catch (error) {
+    showMessage(error.message || '无法连接设备', 'error');
+  }
+});
+
+document.querySelector('#reset').addEventListener('click', async () => {
+  if (!confirm('恢复全部默认设置？')) return;
+  try {
+    const response = await fetch('/api/settings/reset', {method: 'POST'});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || '恢复失败');
+    fillSettings(result);
+    showMessage('已恢复默认。', 'ok');
+  } catch (error) {
+    showMessage(error.message || '无法连接设备', 'error');
+  }
+});
+
+loadSettings();
+</script>
+</body>
+</html>

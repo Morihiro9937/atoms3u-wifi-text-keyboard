@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>karute</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    html, body { width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { position: fixed; inset: 0; margin: 0; background: #f3f5f7; color: #17202a; }
+    main { box-sizing: border-box; width: 100%; max-width: 760px; height: 100vh; height: 100dvh; min-height: 0; margin: 0 auto; padding: calc(12px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; overflow: hidden; }
+    .top { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .device-dot { width: 10px; height: 10px; border-radius: 50%; background: #c62828; box-shadow: 0 0 0 3px #c6282822; transition: background .2s,box-shadow .2s; }
+    .device-dot.green { background: #16833d; box-shadow: 0 0 0 3px #16833d22; }
+    .device-dot.yellow { background: #d9a400; box-shadow: 0 0 0 3px #d9a40022; }
+    .device-dot.blue { background: #246bfd; box-shadow: 0 0 0 3px #246bfd22; }
+    .device-dot.white { background: #fff; border: 1px solid #9aa4ae; }
+    .device-dot.blink { animation: heartbeat .6s steps(1) infinite; }
+    @keyframes heartbeat { 50% { opacity: .18; } }
+    .info-link { display: inline-grid; place-items: center; width: 19px; height: 19px; border: 1px solid #87929d; border-radius: 50%; color: #5f6b76; text-decoration: none; font: 700 13px/1 Georgia,serif; }
+    .top-actions { display: flex; gap: 14px; align-items: center; }
+    .settings-link,.text-link { color: #246bfd; text-decoration: none; font-weight: 650; font-size: 15px; border: 0; background: none; padding: 0; min-height: 0; cursor: pointer; }
+    .text-link { color: #9f2525; }
+    .card { flex: 1 1 auto; min-height: 0; margin-top: 10px; background: white; border-radius: 14px; padding: 12px; box-shadow: 0 2px 14px #17202a12; display: flex; flex-direction: column; overflow: hidden; }
+    textarea { box-sizing: border-box; width: 100%; flex: 1 1 auto; min-height: 0; resize: none; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; border: 1px solid #ccd3da; border-radius: 10px; padding: 12px; font: 16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    textarea:focus { outline: 2px solid #246bfd33; border-color: #246bfd; }
+    .progress { flex: 0 0 auto; height: 5px; margin: 12px 2px 0; background: #e3e8ec; border-radius: 3px; overflow: hidden; }
+    .progress[hidden] { display: none; }
+    .progress-fill { height: 100%; width: 0%; background: #137333; }
+    .progress.offline .progress-fill { background: #9aa4ae; }
+    .summary { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 2px 10px; color: #65717d; font-size: 14px; }
+    .controls { flex: 0 0 auto; display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .controls.split { grid-template-columns: 1fr 1fr; }
+    .controls button { min-height: 62px; border: 0; border-radius: 12px; font-size: 20px; font-weight: 650; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .controls svg { width: 22px; height: 22px; fill: currentColor; }
+    #action { color: white; background: #137333; }
+    #secondary { color: white; background: #b3261e; }
+    #secondary[hidden] { display: none; }
+    button:disabled { opacity: .55; }
+    #action:disabled { color: white; background: #9aa4ae; opacity: 1; }
+    .toast { position: fixed; z-index: 10; top: 12px; left: 16px; right: 16px; max-width: 720px; margin: auto; padding: 12px 14px; border-radius: 10px; color: #8b1e18; background: #fff1ef; box-shadow: 0 3px 18px #17202a25; font-size: 14px; }
+    .ok { color: #137333; }
+    .error { color: #b3261e; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="brand"><span id="deviceDot" class="device-dot" title="正在检查设备连接"></span><a class="info-link" href="/help" aria-label="操作说明">i</a></div>
+    <div class="top-actions"><button id="clear" class="text-link">清空</button><a class="settings-link" href="/settings">设置</a></div>
+  </div>
+  <section class="card">
+    <textarea id="text" placeholder="在这里粘贴文字……" spellcheck="false"></textarea>
+    <div id="progress" class="progress" role="progressbar" aria-label="打印进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div id="progressFill" class="progress-fill"></div></div>
+    <div class="summary"><span id="summaryMode">—</span><span id="summaryChars">0字</span><span id="summaryTime">0秒</span></div>
+    <div id="controls" class="controls">
+      <button id="action" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path id="actionIcon" d="M7 4v16l13-8z"/></svg><span id="actionLabel">打印</span></button>
+      <button id="secondary" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/></svg><span>停止</span></button>
+    </div>
+  </section>
+  <div id="errorToast" class="toast" role="alert" hidden></div>
+</main>
+<script>
+const maxBytes = 32768;
+const statusIntervalMs = 1000;
+const text = document.querySelector('#text');
+const errorToast = document.querySelector('#errorToast');
+const deviceDot = document.querySelector('#deviceDot');
+const actionButton = document.querySelector('#action');
+const secondaryButton = document.querySelector('#secondary');
+const controls = document.querySelector('#controls');
+let currentState = 'DISCONNECTED';
+let refreshInProgress = false;
+let connected = false;
+let storageReady = false;
+let storagePending = false;
+let revision = 0;
+let savedText = '';
+let loaded = false;
+let lastEditAt = 0;
+let dirtyRevisionSent = 0;
+let pendingCommand = null;
+let printProgress = null;
+let uncertainSave = null;
+let busy = false;
+let speedSettings = null;
+let lastInputError = '';
+const bytesOf = value => new TextEncoder().encode(value).length;
+const charsOf = value => Array.from(value).length;
+
+function formatDuration(milliseconds) {
+  const seconds = Math.ceil(milliseconds / 1000);
+  if (seconds < 60) return `${seconds}秒`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return `${minutes}分${rest}秒`;
+}
+
+function estimateEditorMs() {
+  if (!text.value || !speedSettings) return 0;
+  const s = speedSettings;
+  let total = s.startDelayMs;
+  const vucTime = code => {
+    const keys = 3 + Math.max(4, code.toString(16).length);
+    return (keys + 1) * s.vucDownMs +
+      (keys - 1) * s.vucIntervalMs +
+      s.vucBeforeSpaceMs + s.vucAfterSpaceMs;
+  };
+  const chars = Array.from(text.value);
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i];
+    if (char === '\r' && chars[i + 1] === '\n') continue;
+    const code = char.codePointAt(0);
+    if (s.mode === 4) {
+      if (char === '\r' || char === '\n' || char === '\t' || char === '\b') {
+        total += s.altDownMs + s.altAfterMs;
+      } else {
+        // Non-ASCII strict GBK values are five decimal digits. Unsupported
+        // characters are rejected by full device-side preflight before typing.
+        const digits = code > 127 ? 5 : String(code).length;
+        total += s.altBeforeMs + digits * s.altDownMs +
+          (digits - 1) * s.altIntervalMs + s.altReleaseMs + s.altAfterMs;
+      }
+      continue;
+    }
+    if (char === '\r' || char === '\n' || char === '\t' || char === '\b' || char === ' ') {
+      const down = s.mode === 2 ? s.engDownMs : s.vucDownMs;
+      const interval = s.mode === 2 ? s.engIntervalMs : s.vucIntervalMs;
+      total += down + interval;
+    } else if (s.mode === 2) {
+      if (code >= 0x20 && code <= 0x7e) total += s.engDownMs + s.engIntervalMs;
+    } else if (code >= 0x20) {
+      total += vucTime(code);
+    }
+  }
+  return total;
+}
+
+function updateEditorCount() {
+  const modeNames = {1: 'VUC', 2: 'ENG', 4: 'GBK'};
+  document.querySelector('#summaryMode').textContent = speedSettings ? modeNames[speedSettings.mode] : '—';
+  const activeProgress = printProgress && printProgress.hasPrintProgress && !localDirty() && !storagePending;
+  document.querySelector('#summaryChars').hidden = !!activeProgress;
+  document.querySelector('#summaryChars').textContent = `${charsOf(text.value)}字`;
+  document.querySelector('#summaryTime').textContent = activeProgress
+    ? formatDuration(printProgress.remainingMs)
+    : speedSettings ? formatDuration(estimateEditorMs()) : '—';
+  const progress = document.querySelector('#progress');
+  progress.hidden = !activeProgress;
+  progress.classList.toggle('offline', !connected);
+  if (activeProgress) {
+    const percent = Math.max(0, Math.min(100, Math.floor(printProgress.progressPercent)));
+    document.querySelector('#progressFill').style.width = `${percent}%`;
+    progress.setAttribute('aria-valuenow', percent);
+  }
+}
+
+function showMessage(value, kind = '') {
+  if (kind !== 'error') return;
+  errorToast.textContent = value;
+  errorToast.hidden = false;
+  clearTimeout(showMessage.timer);
+  showMessage.timer = setTimeout(() => { errorToast.hidden = true; }, 5000);
+}
+
+function updateDot() {
+  deviceDot.className = 'device-dot';
+  let hint = '设备失联';
+  if (connected) {
+    if (currentState === 'ERROR') hint = '设备错误';
+    else if (currentState === 'TYPING') { deviceDot.classList.add('green', 'blink'); hint = '正在打印'; }
+    else if (currentState === 'PAUSED') { deviceDot.classList.add('blue'); hint = '已暂停'; }
+    else if (localDirty() || storagePending) { deviceDot.classList.add('yellow'); hint = '编辑内容尚未完全写入断电存储'; }
+    else if (currentState === 'STOPPED') hint = '已停止';
+    else if (!savedText) { deviceDot.classList.add('white'); hint = '断电存储为空'; }
+    else { deviceDot.classList.add('green'); hint = '编辑内容已写入断电存储'; }
+  }
+  deviceDot.title = hint;
+}
+
+function localDirty() { return text.value !== savedText; }
+
+function updateButtons() {
+  const typing = currentState === 'TYPING';
+  const paused = currentState === 'PAUSED';
+  const split = typing || paused;
+  controls.classList.toggle('split', split);
+  secondaryButton.hidden = !split;
+  document.querySelector('#actionLabel').textContent = typing ? '暂停' : paused ? '继续' : '打印';
+  document.querySelector('#actionIcon').setAttribute('d', typing ? 'M5 4h5v16H5zm9 0h5v16h-5z' : 'M7 4v16l13-8z');
+  actionButton.disabled = busy || !connected || (!split && (!text.value || !storageReady || bytesOf(text.value) > maxBytes));
+  secondaryButton.disabled = busy || !connected;
+  text.readOnly = !loaded || split || busy;
+  document.querySelector('#clear').disabled = !loaded || split || busy || !connected;
+  updateDot();
+}
+
+// A single request/response per second carries commands, editor changes,
+// heartbeat acknowledgement and the complete print snapshot. Never replay a
+// command automatically after a lost acknowledgement.
+async function refreshStatus() {
+  if (refreshInProgress) return;
+  refreshInProgress = true;
+  const operation = pendingCommand;
+  pendingCommand = null;
+  const snapshot = text.value;
+  const version = revision;
+  const validSize = bytesOf(snapshot) <= maxBytes;
+  const save = loaded && !uncertainSave && (localDirty() || storagePending) && validSize &&
+    (operation?.command === 'start' || (!busy && Date.now() - lastEditAt >= 1500));
+  const body = new URLSearchParams();
+  body.set('command', !loaded ? 'load' : operation?.command || (save ? 'save' : ''));
+  if (save) { body.set('save', '1'); body.set('revision', version); }
+  else if (loaded && (localDirty() || storagePending) && version > dirtyRevisionSent && !operation) {
+    body.set('dirty', '1'); body.set('revision', version);
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+  if (save) uncertainSave = {snapshot, version};
+  let received = false;
+  try {
+    // Plain UTF-8 avoids tripling Chinese text through form percent encoding.
+    // Metadata and text still travel in the same single exchange.
+    const response = await fetch(`/api/sync?${body}`, {method: 'POST',
+      headers: {'Content-Type': 'text/plain; charset=utf-8'},
+      body: save ? snapshot : '', cache: 'no-store', signal: controller.signal});
+    if (!response.ok) throw new Error('设备连接异常');
+    const data = await response.json();
+    if (!data.linked) throw new Error('设备未确认连接');
+    received = true;
+    connected = true;
+    currentState = data.startPending ? 'TYPING' : data.state;
+    storageReady = data.storageReady;
+    storagePending = data.storagePending;
+    revision = Math.max(revision, data.revision);
+    speedSettings = {...speedSettings, ...data};
+    printProgress = data;
+    if (!loaded) {
+      text.value = data.text;
+      savedText = data.text;
+      loaded = true;
+      dirtyRevisionSent = data.revision;
+    }
+    if (uncertainSave) {
+      if (data.savedRevision === uncertainSave.version && !data.storagePending)
+        savedText = uncertainSave.snapshot;
+      uncertainSave = null;
+    }
+    if (data.commandCode >= 400) {
+      throw new Error(data.commandResult?.message || '操作失败');
+    }
+    if (body.get('dirty') === '1') dirtyRevisionSent = version;
+    if (operation?.command === 'clear') {
+      text.value = ''; savedText = ''; dirtyRevisionSent = data.revision;
+    }
+    if (data.inputError && data.inputError !== lastInputError) showMessage(data.inputError, 'error');
+    lastInputError = data.inputError || '';
+    operation?.resolve();
+  } catch (error) {
+    // A command validation error still confirms the link. A transport failure
+    // freezes the last snapshot and greys the progress bar.
+    if (!received) connected = false;
+    if (operation || save) showMessage(error.message || '无法连接设备，请确认当前状态后重试。', 'error');
+    operation?.reject(error);
+  } finally {
+    clearTimeout(timeout);
+    refreshInProgress = false;
+    updateEditorCount();
+    updateButtons();
+  }
+}
+
+function queueCommand(command) {
+  return new Promise((resolve, reject) => { pendingCommand = {command, resolve, reject}; });
+}
+
+text.addEventListener('input', () => {
+  ++revision;
+  lastEditAt = Date.now();
+  storagePending = true;
+  // Editing a completed/stopped document starts a fresh editor estimate.
+  printProgress = null;
+  updateEditorCount();
+  updateButtons();
+  if (bytesOf(text.value) > maxBytes) showMessage('正文超过 32768 字节，未保存。', 'error');
+});
+
+async function performCommand(command) {
+  if (busy || !loaded || !connected) return;
+  if (command === 'start' && bytesOf(text.value) > maxBytes) return;
+  busy = true;
+  updateButtons();
+  try { await queueCommand(command); }
+  catch (_) { /* The unified exchange already displayed the error. */ }
+  finally { busy = false; updateButtons(); }
+}
+
+document.querySelector('#clear').addEventListener('click', () => performCommand('clear'));
+actionButton.addEventListener('click', () => performCommand(
+  currentState === 'TYPING' ? 'pause' : currentState === 'PAUSED' ? 'resume' : 'start'));
+secondaryButton.addEventListener('click', () => performCommand('stop'));
+
+text.readOnly = true;
+refreshStatus();
+setInterval(refreshStatus, statusIntervalMs);
+</script>
+</body>
+</html>
